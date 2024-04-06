@@ -5,9 +5,12 @@ Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file creates your application.
 """
 
-from app import app
-from flask import render_template, request, jsonify, send_file
 import os
+from app import app,db
+from app.models import Movie
+from flask import render_template, request, jsonify, send_file, flash, redirect, url_for, send_from_directory
+from app.forms import MovieForm
+from werkzeug.utils import secure_filename
 
 
 ###
@@ -18,6 +21,20 @@ import os
 def index():
     return jsonify(message="This is the beginning of our API")
 
+@app.route('/api/v1/movies', methods=['GET','POST'])
+def movies():
+    form = MovieForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        title = form.title.data
+        description = form.description.data
+        poster = form.poster.data
+        filename = secure_filename(poster.filename)
+        poster.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        new_movie = Movie(title, description, filename)
+        db.session.add(new_movie)
+        db.session.commit()
+        return jsonify(message='Movie added successfully', status='success', title=title, description=description, poster=filename)
+    return jsonify(errors=form_errors(form))
 
 ###
 # The functions below should be applicable to all Flask apps.
@@ -57,7 +74,7 @@ def add_header(response):
     return response
 
 
-@app.errorhandler(404)
-def page_not_found(error):
-    """Custom 404 page."""
-    return render_template('404.html'), 404
+# @app.errorhandler(404)
+# def page_not_found(error):
+#     """Custom 404 page."""
+#     return render_template('404.html'), 404
