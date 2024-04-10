@@ -35,7 +35,7 @@ def movies():
         description = form.description.data
         poster = form.poster.data
         filename = secure_filename(poster.filename)
-        poster.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        poster.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
         new_movie = Movie(title, description, filename)
         db.session.add(new_movie)
         db.session.commit()
